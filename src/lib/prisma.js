@@ -7,7 +7,8 @@ const globalForPrisma = global;
 
 const dbUrl = process.env.DATABASE_URL || `file:${path.join(process.cwd(), 'dev.db')}`;
 
-const adapter = new PrismaLibSql({ url: dbUrl })
+const libsql = createClient({ url: dbUrl });
+const adapter = new PrismaLibSql(libsql);
 
 export const prisma =
   globalForPrisma.prisma ||
