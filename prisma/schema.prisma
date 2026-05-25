@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  bookings  Booking[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  location    String   // "Dandeli" or "Gokarna"
+  price       Float
+  imageUrl    String?
+  duration    String   // e.g. "2 Days 1 Night"
+  bookings    Booking[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  userId        String
+  packageId     String
+  bookingDate   DateTime
+  guests        Int      @default(1)
+  totalPrice    Float
+  status        String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  paymentId     String?  // Mock payment ID
+  user          User     @relation(fields: [userId], references: [id])
+  package       Package  @relation(fields: [packageId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ContactQuery {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  status    String   @default("NEW") // NEW, READ, REPLIED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
