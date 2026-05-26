@@ -13,14 +13,18 @@ export async function submitContactQuery(data) {
 
     const fullMessage = `Phone: ${phone}\nDate: ${date}\nGuests: ${guestsInt}\n\nRequest: ${message}`;
 
-    const query = await prisma.contactQuery.create({
-      data: {
-        name,
-        email,
-        message: fullMessage,
-        status: 'NEW'
-      }
-    });
+    try {
+      const query = await prisma.contactQuery.create({
+        data: {
+          name,
+          email,
+          message: fullMessage,
+          status: 'NEW'
+        }
+      });
+    } catch (dbError) {
+      console.error('Failed to save contact query to SQLite:', dbError);
+    }
 
     // Send confirmation email to the user
     await sendEmail({
