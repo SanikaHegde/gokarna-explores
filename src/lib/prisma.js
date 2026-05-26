@@ -7,14 +7,21 @@ const globalForPrisma = global;
 
 const dbUrl = process.env.DATABASE_URL || `file:${path.join(process.cwd(), 'dev.db')}`;
 
-const libsql = createClient({ url: dbUrl });
-const adapter = new PrismaLibSql(libsql);
+export const prisma = new Proxy({}, {
+  get(target, prop) {
+    if (!globalForPrisma.prisma) {
+      const libsql = createClient({ url: dbUrl });
+      const adapter = new PrismaLibSql(libsql);
+      globalForPrisma.prisma = new PrismaClient({
+        adapter,
+        log: ['query'],
+      });
+    }
+    return globalForPrisma.prisma[prop];
+  }
+});
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    adapter,
-    log: ['query'],
-  })
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') {
+  // We can't directly assign to globalForPrisma.prisma here because it would trigger instantiation.
+  // The proxy handles the global cache internally.
+}
