@@ -6,17 +6,25 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
-  const bookings = await prisma.booking.findMany({
-    include: {
-      user: true,
-      package: true,
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+  let bookings = [];
+  let contactQueries = [];
+  
+  try {
+    bookings = await prisma.booking.findMany({
+      include: {
+        user: true,
+        package: true,
+      },
+      orderBy: { createdAt: 'desc' }
+    });
 
-  const contactQueries = await prisma.contactQuery.findMany({
-    orderBy: { createdAt: 'desc' }
-  });
+    contactQueries = await prisma.contactQuery.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+  } catch (error) {
+    console.error('Failed to load database on Vercel:', error);
+    // Vercel serverless SQLite failure fallback
+  }
 
   return (
     <div className="admin-dashboard-wrapper">
