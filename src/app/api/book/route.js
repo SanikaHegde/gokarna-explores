@@ -13,129 +13,100 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    let pkg = {
-      id: packageId,
-      title: 'Gokarna Package',
-      price: 4000,
-    };
-
-    try {
-      // Dynamic stays handling: create stay as a Package in the DB if it is a stay
-      if (packageId && packageId.startsWith('stay_')) {
-        let stayTitle = 'Oceanfront Room';
-        let stayPrice = 4000;
-        
-        if (packageId === 'stay_1_room_1') {
-          stayTitle = 'Standard Beach Cottage (The Beachwalk Stay)';
-          stayPrice = 4500;
-        } else if (packageId === 'stay_1_room_2') {
-          stayTitle = 'Luxury Ocean Villa (The Beachwalk Stay)';
-          stayPrice = 6500;
-        } else if (packageId === 'stay_2_room_1') {
-          stayTitle = 'Beachfront Bamboo Cabin (The Beach Melody)';
-          stayPrice = 3800;
-        } else if (packageId === 'stay_2_room_2') {
-          stayTitle = 'Premium Wooden Cottage (The Beach Melody)';
-          stayPrice = 5000;
-        } else if (packageId === 'stay_3_room_1') {
-          stayTitle = 'Garden Villa Suite (Elmar - Beach Village)';
-          stayPrice = 5200;
-        } else if (packageId === 'stay_3_room_2') {
-          stayTitle = 'Royal Palm Suite (Elmar - Beach Village)';
-          stayPrice = 7500;
-        }
-        
-        await prisma.package.upsert({
-          where: { id: packageId },
-          update: {
-            title: stayTitle,
-            price: stayPrice,
-            location: 'Gokarna',
-            duration: '1 Night',
-          },
-          create: {
-            id: packageId,
-            title: stayTitle,
-            description: `Luxurious room category at ${stayTitle} in Gokarna.`,
-            location: 'Gokarna',
-            price: stayPrice,
-            imageUrl: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?q=80&w=800',
-            duration: '1 Night',
-          }
-        });
-      }
-
-      // In a real app, calculate totalPrice from the package price
-      let dbPkg = await prisma.package.findUnique({ where: { id: packageId } });
-      if (!dbPkg) {
-        // Fallback to mock data for pkg_
-        const { mockPackages } = require('../../../lib/data');
-        const mockPkg = mockPackages.find(p => p.id === packageId);
-        if (mockPkg) {
-          // Upsert it so it exists in DB for foreign key relations
-          dbPkg = await prisma.package.upsert({
-            where: { id: packageId },
-            update: {},
-            create: {
-              id: mockPkg.id,
-              title: mockPkg.title,
-              description: mockPkg.description,
-              location: mockPkg.location,
-              price: mockPkg.price,
-              imageUrl: mockPkg.imageUrl,
-              duration: mockPkg.duration,
-            }
-          });
-        }
+    // Dynamic stays handling: create stay as a Package in the DB if it is a stay
+    if (packageId && packageId.startsWith('stay_')) {
+      let stayTitle = 'Oceanfront Room';
+      let stayPrice = 4000;
+      
+      if (packageId === 'stay_1_room_1') {
+        stayTitle = 'Standard Beach Cottage (The Beachwalk Stay)';
+        stayPrice = 4500;
+      } else if (packageId === 'stay_1_room_2') {
+        stayTitle = 'Luxury Ocean Villa (The Beachwalk Stay)';
+        stayPrice = 6500;
+      } else if (packageId === 'stay_2_room_1') {
+        stayTitle = 'Beachfront Bamboo Cabin (The Beach Melody)';
+        stayPrice = 3800;
+      } else if (packageId === 'stay_2_room_2') {
+        stayTitle = 'Premium Wooden Cottage (The Beach Melody)';
+        stayPrice = 5000;
+      } else if (packageId === 'stay_3_room_1') {
+        stayTitle = 'Garden Villa Suite (Elmar - Beach Village)';
+        stayPrice = 5200;
+      } else if (packageId === 'stay_3_room_2') {
+        stayTitle = 'Royal Palm Suite (Elmar - Beach Village)';
+        stayPrice = 7500;
       }
       
-      if (dbPkg) {
-        pkg = dbPkg;
-      }
-    } catch (dbError) {
-      console.error('Failed to load package from SQLite:', dbError);
-      // Fallback to mock data if DB completely fails
+      await prisma.package.upsert({
+        where: { id: packageId },
+        update: {
+          title: stayTitle,
+          price: stayPrice,
+          location: 'Gokarna',
+          duration: '1 Night',
+        },
+        create: {
+          id: packageId,
+          title: stayTitle,
+          description: `Luxurious room category at ${stayTitle} in Gokarna.`,
+          location: 'Gokarna',
+          price: stayPrice,
+          imageUrl: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?q=80&w=800',
+          duration: '1 Night',
+        }
+      });
+    }
+
+    // In a real app, calculate totalPrice from the package price
+    let pkg = await prisma.package.findUnique({ where: { id: packageId } });
+    if (!pkg) {
+      // Fallback to mock data for pkg_
       const { mockPackages } = require('../../../lib/data');
       const mockPkg = mockPackages.find(p => p.id === packageId);
       if (mockPkg) {
-        pkg = mockPkg;
+        // Upsert it so it exists in DB for foreign key relations
+        pkg = await prisma.package.upsert({
+          where: { id: packageId },
+          update: {},
+          create: {
+            id: mockPkg.id,
+            title: mockPkg.title,
+            description: mockPkg.description,
+            location: mockPkg.location,
+            price: mockPkg.price,
+            imageUrl: mockPkg.imageUrl,
+            duration: mockPkg.duration,
+          }
+        });
+      } else {
+        return NextResponse.json({ error: 'Package not found' }, { status: 404 });
       }
     }
 
     const totalPrice = pkg.price * Number(guests);
 
     // Create user if not exists or update
-    let user = { id: 'mock_user_' + Math.random().toString(36).substring(2, 9) };
-    try {
-      user = await prisma.user.upsert({
-        where: { email },
-        update: { name, phone },
-        create: { name, email, phone }
-      });
-    } catch (dbError) {
-      console.error('Failed to save user to Vercel SQLite:', dbError);
-    }
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: { name, phone },
+      create: { name, email, phone }
+    });
 
     const finalPaymentId = paymentId || ('mock_pay_' + Math.random().toString(36).substring(2, 9));
 
     // Create the booking record
-    let bookingId = 'mock_booking_' + Math.random().toString(36).substring(2, 9);
-    try {
-      const booking = await prisma.booking.create({
-        data: {
-          userId: user.id,
-          packageId,
-          bookingDate: new Date(date),
-          guests: Number(guests),
-          totalPrice,
-          status: 'CONFIRMED',
-          paymentId: finalPaymentId,
-        }
-      });
-      bookingId = booking.id;
-    } catch (dbError) {
-      console.error('Failed to save booking to Vercel SQLite:', dbError);
-    }
+    const booking = await prisma.booking.create({
+      data: {
+        userId: user.id,
+        packageId,
+        bookingDate: new Date(date),
+        guests: Number(guests),
+        totalPrice,
+        status: 'CONFIRMED',
+        paymentId: finalPaymentId,
+      }
+    });
 
     // Send confirmation email
     const { sendEmail } = require('../../../lib/email');
@@ -168,7 +139,7 @@ export async function POST(request) {
       `
     });
 
-    return NextResponse.json({ success: true, bookingId }, { status: 200 });
+    return NextResponse.json({ success: true, bookingId: booking.id }, { status: 200 });
   } catch (error) {
     console.error('Booking Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -21,15 +21,9 @@ export async function POST(request) {
       else if (packageId === 'stay_3_room_1') price = 5200;
       else if (packageId === 'stay_3_room_2') price = 7500;
     } else {
-      try {
-        let pkg = await prisma.package.findUnique({ where: { id: packageId } });
-        if (pkg) {
-          price = pkg.price;
-        } else {
-          throw new Error("Package not found in DB");
-        }
-      } catch (error) {
-        // Fallback to mock data if SQLite fails on Vercel
+      let pkg = await prisma.package.findUnique({ where: { id: packageId } });
+      if (!pkg) {
+        // Fallback to mock data for pkg_
         const { mockPackages } = require('../../../lib/data');
         const mockPkg = mockPackages.find(p => p.id === packageId);
         if (mockPkg) {
@@ -37,6 +31,8 @@ export async function POST(request) {
         } else {
           return NextResponse.json({ error: 'Package not found' }, { status: 404 });
         }
+      } else {
+        price = pkg.price;
       }
     }
 
