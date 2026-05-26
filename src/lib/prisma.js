@@ -8,6 +8,7 @@ export const prisma = new Proxy({}, {
     if (!globalForPrisma.prisma) {
       globalForPrisma.prisma = new PrismaClient({
         log: ['query'],
+        datasourceUrl: process.env.DATABASE_URL,
       });
     }
     return globalForPrisma.prisma[prop];
