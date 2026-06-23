@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import Razorpay from 'razorpay';
 import { prisma } from '../../../lib/prisma';
+import { mockPackages } from '../../../lib/data';
 
 export async function POST(request) {
   try {
@@ -24,7 +25,6 @@ export async function POST(request) {
       let pkg = await prisma.package.findUnique({ where: { id: packageId } });
       if (!pkg) {
         // Fallback to mock data for pkg_
-        const { mockPackages } = require('../../../lib/data');
         const mockPkg = mockPackages.find(p => p.id === packageId);
         if (mockPkg) {
           price = mockPkg.price;

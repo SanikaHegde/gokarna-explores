@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
+import { mockPackages } from '../../../lib/data';
+import { sendEmail } from '../../../lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,7 +64,6 @@ export async function POST(request) {
     let pkg = await prisma.package.findUnique({ where: { id: packageId } });
     if (!pkg) {
       // Fallback to mock data for pkg_
-      const { mockPackages } = require('../../../lib/data');
       const mockPkg = mockPackages.find(p => p.id === packageId);
       if (mockPkg) {
         // Upsert it so it exists in DB for foreign key relations
@@ -109,7 +110,6 @@ export async function POST(request) {
     });
 
     // Send confirmation email
-    const { sendEmail } = require('../../../lib/email');
     await sendEmail({
       to: email,
       subject: 'Booking Confirmed - Gokarna Explores',

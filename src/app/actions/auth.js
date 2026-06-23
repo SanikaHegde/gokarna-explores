@@ -7,8 +7,10 @@ export async function loginAdmin(formData) {
   const username = formData.get('username');
   const password = formData.get('password');
 
-  // Hardcoded admin credentials
-  if (username === 'admin' && password === 'password123') {
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'password123';
+
+  if (username === adminUsername && password === adminPassword) {
     // Set a secure HTTP-only cookie
     const cookieStore = await cookies();
     cookieStore.set('admin_session', 'true', {
