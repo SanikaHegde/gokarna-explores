@@ -46,7 +46,7 @@ export async function replyToContactQuery(id, replyMessage) {
       return { success: false, error: 'Contact query not found.' };
     }
 
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: query.email,
       subject: 'Reply from Gokarna Explores',
       html: `
@@ -58,6 +58,10 @@ export async function replyToContactQuery(id, replyMessage) {
         <p><strong>Gokarna Explores Team</strong></p>
       `
     });
+
+    if (!emailResult.success) {
+      return { success: false, error: emailResult.error || 'Email send failed.' };
+    }
 
     await prisma.contactQuery.update({
       where: { id },
