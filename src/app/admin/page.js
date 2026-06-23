@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { updateBookingStatus, updateContactQueryStatus } from '../actions/admin';
+import { updateBookingStatus, updateContactQueryStatus, replyToContactQuery } from '../actions/admin';
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 
@@ -141,17 +141,39 @@ export default async function AdminDashboard() {
                         </span>
                       </td>
                       <td>
-                        <form action={async (formData) => {
-                          'use server';
-                          await updateContactQueryStatus(query.id, formData.get('status'));
-                        }} className="admin-action-form">
-                          <select name="status" defaultValue={query.status} className="admin-select">
-                            <option value="NEW">NEW</option>
-                            <option value="READ">READ</option>
-                            <option value="REPLIED">REPLIED</option>
-                          </select>
-                          <button type="submit" className="admin-btn-update">Update</button>
-                        </form>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '260px' }}>
+                          <form action={async (formData) => {
+                            'use server';
+                            await updateContactQueryStatus(query.id, formData.get('status'));
+                          }} className="admin-action-form">
+                            <select name="status" defaultValue={query.status} className="admin-select">
+                              <option value="NEW">NEW</option>
+                              <option value="READ">READ</option>
+                              <option value="REPLIED">REPLIED</option>
+                            </select>
+                            <button type="submit" className="admin-btn-update">Update</button>
+                          </form>
+
+                          <form action={async (formData) => {
+                            'use server';
+                            await replyToContactQuery(query.id, formData.get('replyMessage'));
+                          }} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <textarea
+                              name="replyMessage"
+                              rows={3}
+                              placeholder="Write reply to guest..."
+                              style={{
+                                width: '100%',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '8px',
+                                padding: '8px',
+                                fontSize: '0.85rem',
+                                resize: 'vertical'
+                              }}
+                            />
+                            <button type="submit" className="admin-btn-update">Send Reply</button>
+                          </form>
+                        </div>
                       </td>
                     </tr>
                   ))}
