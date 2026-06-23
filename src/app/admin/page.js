@@ -3,6 +3,7 @@ import { updateBookingStatus, updateContactQueryStatus, replyToContactQuery } fr
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import AutoRefresh from './AutoRefresh';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,7 @@ export default async function AdminDashboard({ searchParams }) {
 
   return (
     <div className="admin-dashboard-wrapper">
+      <AutoRefresh intervalMs={7000} />
       <div className="container">
         <div className="admin-header">
           <h1 className="admin-title">Admin Dashboard</h1>
