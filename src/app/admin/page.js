@@ -2,10 +2,15 @@ import { prisma } from '@/lib/prisma';
 import { updateBookingStatus, updateContactQueryStatus, replyToContactQuery } from '../actions/admin';
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
+  const replySuccess = resolvedSearchParams?.replySuccess === '1';
+  const replyError = resolvedSearchParams?.replyError;
+
   const bookings = await prisma.booking.findMany({
     include: {
       user: true,
@@ -34,6 +39,34 @@ export default async function AdminDashboard() {
             </form>
           </div>
         </div>
+
+        {replySuccess && (
+          <div style={{
+            background: '#eafaf1',
+            border: '1px solid #b7ebc6',
+            color: '#1e7e34',
+            padding: '12px 16px',
+            borderRadius: '10px',
+            marginBottom: '20px',
+            fontWeight: 600
+          }}>
+            Reply email sent successfully.
+          </div>
+        )}
+
+        {replyError && (
+          <div style={{
+            background: '#fff1f0',
+            border: '1px solid #ffa39e',
+            color: '#a8071a',
+            padding: '12px 16px',
+            borderRadius: '10px',
+            marginBottom: '20px',
+            fontWeight: 600
+          }}>
+            Failed to send reply: {replyError}
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
           
@@ -156,7 +189,13 @@ export default async function AdminDashboard() {
 
                           <form action={async (formData) => {
                             'use server';
-                            await replyToContactQuery(query.id, formData.get('replyMessage'));
+                            const result = await replyToContactQuery(query.id, formData.get('replyMessage'));
+                            if (result.success) {
+                              redirect('/admin?replySuccess=1');
+                            }
+
+                            const errorMessage = encodeURIComponent(result.error || 'Unable to send reply email');
+                            redirect(`/admin?replyError=${errorMessage}`);
                           }} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <textarea
                               name="replyMessage"
