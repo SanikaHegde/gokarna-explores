@@ -26,7 +26,7 @@ export default async function AdminDashboard({ searchParams }) {
 
   return (
     <div className="admin-dashboard-wrapper">
-      <AutoRefresh intervalMs={7000} />
+      <AutoRefresh intervalMs={5000} hiddenIntervalMs={20000} />
       <div className="container">
         <div className="admin-header">
           <h1 className="admin-title">Admin Dashboard</h1>
